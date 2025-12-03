@@ -1,0 +1,232 @@
+package com.mycompany.librarycatalog;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.GsonBuilder;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AddBookFrame extends JFrame {
+
+    private JLabel bookIdLabel;
+    private JTextField isbnField, titleField, authorField, publisherField, yearField, copyIdField, priceField, languageField;
+    private JComboBox<String> genreDropdown;
+    private static final String FILE_PATH = "C:\\Users\\syahm\\Documents\\NetBeansProjects\\LibraryCatalog\\src\\main\\java\\com\\mycompany\\librarycatalog\\data\\BookData.json";
+
+    public AddBookFrame() {
+        setTitle("Add New Book");
+        setSize(400, 400);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Book ID (Auto-generated)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("Book ID:"), gbc);
+        gbc.gridx = 1;
+        bookIdLabel = new JLabel(String.valueOf(getNextBookId()));
+        panel.add(bookIdLabel, gbc);
+
+        // ISBN
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("ISBN:"), gbc);
+        gbc.gridx = 1;
+        isbnField = new JTextField(20);
+        panel.add(isbnField, gbc);
+
+        // Title
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Title:"), gbc);
+        gbc.gridx = 1;
+        titleField = new JTextField(20);
+        panel.add(titleField, gbc);
+
+        // Author
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Author:"), gbc);
+        gbc.gridx = 1;
+        authorField = new JTextField(20);
+        panel.add(authorField, gbc);
+
+        // Publisher
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Publisher:"), gbc);
+        gbc.gridx = 1;
+        publisherField = new JTextField(20);
+        panel.add(publisherField, gbc);
+
+        // Year
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Year:"), gbc);
+        gbc.gridx = 1;
+        yearField = new JTextField(20);
+        panel.add(yearField, gbc);
+
+        // Genre Dropdown
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Genre:"), gbc);
+        gbc.gridx = 1;
+        String[] genres = {"Biography & Autobiography", "Fantasy", "Fiction", "Historical Fiction",
+                "Horror", "Mystery", "Non-Fiction", "Romance", "Science Fiction", "Thriller"};
+        genreDropdown = new JComboBox<>(genres);
+        panel.add(genreDropdown, gbc);
+
+        // Copy ID
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Copy ID:"), gbc);
+        gbc.gridx = 1;
+        copyIdField = new JTextField(20);
+        panel.add(copyIdField, gbc);
+
+        // Price
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Price:"), gbc);
+        gbc.gridx = 1;
+        priceField = new JTextField(20);
+        panel.add(priceField, gbc);
+
+        // Language
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Language:"), gbc);
+        gbc.gridx = 1;
+        languageField = new JTextField(20);
+        panel.add(languageField, gbc);
+
+        // Save Button
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JButton saveButton = new JButton("Save");
+        panel.add(saveButton, gbc);
+
+        // Add action listener for validation and saving
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                validateAndSave();
+            }
+        });
+
+        add(panel, BorderLayout.CENTER);
+        setVisible(true);
+    }
+
+    private int getNextBookId() {
+        try (FileReader reader = new FileReader(FILE_PATH)) {
+            List<Book> books = new Gson().fromJson(reader, new TypeToken<List<Book>>() {}.getType());
+            if (books == null || books.isEmpty()) {
+                return 1;
+            }
+            return books.stream().mapToInt(book -> book.bookId).max().orElse(0) + 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 1;
+        }
+    }
+
+    private void validateAndSave() {
+        String isbn = isbnField.getText().trim();
+        String title = titleField.getText().trim();
+        String author = authorField.getText().trim();
+        String publisher = publisherField.getText().trim();
+        String yearStr = yearField.getText().trim();
+        String copyIdStr = copyIdField.getText().trim();
+        String priceStr = priceField.getText().trim();
+        String language = languageField.getText().trim();
+        String genre = (String) genreDropdown.getSelectedItem();
+
+        if (!isbn.matches("\\d{10,13}")) {
+            showError("Invalid ISBN. Must be 10-13 digits.");
+            return;
+        }
+        if (title.isEmpty()) {
+            showError("Title cannot be empty.");
+            return;
+        }
+        if (author.isEmpty()) {
+            showError("Author cannot be empty.");
+            return;
+        }
+        if (publisher.isEmpty()) {
+            showError("Publisher cannot be empty.");
+            return;
+        }
+        if (!yearStr.matches("\\d{4}")) {
+            showError("Invalid Year. Must be a 4-digit number.");
+            return;
+        }
+        if (!copyIdStr.matches("\\d+")) {
+            showError("Invalid Copy ID. Must be a positive integer.");
+            return;
+        }
+        if (!priceStr.matches("\\d+(\\.\\d{1,2})?")) {
+            showError("Invalid Price. Must be a positive number.");
+            return;
+        }
+        if (language.isEmpty()) {
+            showError("Language cannot be empty.");
+            return;
+        }
+
+        Book newBook = new Book(
+                Integer.parseInt(bookIdLabel.getText()),
+                isbn, title, author, publisher,
+                Integer.parseInt(yearStr), genre,
+                Integer.parseInt(copyIdStr),
+                Double.parseDouble(priceStr),
+                language
+        );
+
+        saveBookToFile(newBook);
+    }
+
+    private void saveBookToFile(Book newBook) {
+        List<Book> books = new ArrayList<>();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        try (FileReader reader = new FileReader(FILE_PATH)) {
+            books = new Gson().fromJson(reader, new TypeToken<List<Book>>() {}.getType());
+            if (books == null) {
+                books = new ArrayList<>();
+            }
+        } catch (IOException e) {
+            System.out.println("File not found, creating a new one...");
+        }
+
+        books.add(newBook);
+
+        try (FileWriter writer = new FileWriter(FILE_PATH)) {
+            gson.toJson(books, writer);
+            JOptionPane.showMessageDialog(this, "Book saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            dispose(); // Close window after saving
+        } catch (IOException e) {
+            showError("Error saving the book: " + e.getMessage());
+        }
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+

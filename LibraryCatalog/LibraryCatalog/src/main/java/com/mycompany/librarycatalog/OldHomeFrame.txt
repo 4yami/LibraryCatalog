@@ -1,0 +1,214 @@
+package com.mycompany.librarycatalog;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.io.FileReader;
+import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import com.mycompany.librarycatalog.Book;
+
+public class HomeFrame {
+
+    public void showHomeFrame() {
+        JFrame frame = new JFrame("Library Catalog - Home");
+        frame.setSize(800, 600);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+        frame.setLocationRelativeTo(null);
+
+        // --- Top Panel ---
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.DARK_GRAY);
+        topPanel.setPreferredSize(new Dimension(frame.getWidth(), 120));
+
+        JLabel titleLabel = new JLabel("LIBRARY CATALOG");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 28));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 0));
+
+        JLabel helpLabel = new JLabel("<html><u>HELP</u></html>");
+        helpLabel.setForeground(Color.LIGHT_GRAY);
+        helpLabel.setFont(new Font("Verdana", Font.PLAIN, 13));
+        helpLabel.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Change cursor
+
+        helpLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                helpLabel.setForeground(Color.WHITE); // Change color when hovered
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                helpLabel.setForeground(Color.LIGHT_GRAY); // Reset color when not hovered
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JOptionPane.showMessageDialog(frame,
+                        "For help, contact support@library.com or visit our website.",
+                        "Help",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        JLabel aboutUsLabel = new JLabel("<html><u>ABOUT US</u></html>");
+        aboutUsLabel.setForeground(Color.LIGHT_GRAY);
+        aboutUsLabel.setFont(new Font("Verdana", Font.PLAIN, 13));
+        aboutUsLabel.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Change cursor
+
+        aboutUsLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                aboutUsLabel.setForeground(Color.WHITE); // Change color when hovered
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                aboutUsLabel.setForeground(Color.LIGHT_GRAY); // Reset color when not hovered
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JOptionPane.showMessageDialog(frame,
+                        "Library Catalog v1.0\nDeveloped by XYZ Team\nFor more info, visit: www.librarycatalog.com",
+                        "About Us",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        rightPanel.add(helpLabel);
+        rightPanel.add(aboutUsLabel);
+
+        // --- Search Panel ---
+        JPanel searchPanel = new JPanel(new GridBagLayout());
+        searchPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
+        gbc.insets = new Insets(0, 10, 0, 10);
+
+        JTextField searchField = new JTextField(20);
+        searchField.setFont(new Font("Verdana", Font.PLAIN, 14));
+        searchField.setText("Search books...");
+        searchField.setForeground(Color.GRAY);
+
+        searchField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().equals("Search books...")) {
+                    searchField.setText("");
+                    searchField.setForeground(Color.BLACK);
+                }
+            }
+
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setText("Search books...");
+                    searchField.setForeground(Color.GRAY);
+                }
+            }
+        });
+
+        JButton searchButton = new JButton("Search");
+        searchButton.setFont(new Font("Verdana", Font.PLAIN, 14));
+        searchButton.setForeground(Color.WHITE);
+        searchButton.setBackground(Color.DARK_GRAY);
+
+        searchButton.addActionListener(e -> {
+            String searchQuery = searchField.getText();
+            JOptionPane.showMessageDialog(frame, "Searching for: " + searchQuery);
+        });
+
+        searchPanel.add(searchField, gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.0;
+        searchPanel.add(searchButton, gbc);
+
+        topPanel.add(titleLabel, BorderLayout.WEST);
+        topPanel.add(rightPanel, BorderLayout.EAST);
+        topPanel.add(searchPanel, BorderLayout.SOUTH);
+
+        frame.add(topPanel, BorderLayout.NORTH);
+
+        // --- Table Data ---
+        String[] columnNames = {"ISBN", "Title", "Author", "Publisher", "Year", "Genre", "Copy ID"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+
+        try (FileReader reader = new FileReader("C:\\Users\\syahm\\Documents\\NetBeansProjects\\LibraryCatalog\\src\\main\\java\\com\\mycompany\\librarycatalog\\data\\BookData.json")) {
+            List<Book> books = new Gson().fromJson(reader, new TypeToken<List<Book>>() {
+            }.getType());
+            for (Book book : books) {
+                tableModel.addRow(new Object[]{book.isbn, book.title, book.author, book.publisher, book.year, book.genre, book.copyId});
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        JTable catalogTable = new JTable(tableModel);
+        catalogTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+        // --- Center Alignment for ISBN, Year, and Copy ID ---
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        catalogTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // ISBN
+        catalogTable.getColumnModel().getColumn(4).setCellRenderer(centerRenderer); // Year
+        catalogTable.getColumnModel().getColumn(6).setCellRenderer(centerRenderer); // Copy ID
+
+        // Make the table scrollable
+        JScrollPane scrollPane = new JScrollPane(catalogTable);
+        scrollPane.setPreferredSize(new Dimension(frame.getWidth(), 300));
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        // --- Dynamic Column Resizing ---
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent evt) {
+                int tableWidth = catalogTable.getWidth();
+
+                catalogTable.getColumnModel().getColumn(0).setPreferredWidth((int) (tableWidth * 0.15)); // ISBN
+                catalogTable.getColumnModel().getColumn(1).setPreferredWidth((int) (tableWidth * 0.30)); // Title
+                catalogTable.getColumnModel().getColumn(2).setPreferredWidth((int) (tableWidth * 0.15)); // Author
+                catalogTable.getColumnModel().getColumn(3).setPreferredWidth((int) (tableWidth * 0.15)); // Publisher
+                catalogTable.getColumnModel().getColumn(4).setPreferredWidth((int) (tableWidth * 0.07)); // Year
+                catalogTable.getColumnModel().getColumn(5).setPreferredWidth((int) (tableWidth * 0.13)); // Genre
+                catalogTable.getColumnModel().getColumn(6).setPreferredWidth((int) (tableWidth * 0.08)); // Copy ID
+            }
+        });
+
+        // --- Add Book Button ---
+        JButton addBookButton = new JButton("Add Book");
+        addBookButton.setFont(new Font("Verdana", Font.PLAIN, 14));
+        addBookButton.setBackground(Color.DARK_GRAY);
+        addBookButton.setForeground(Color.WHITE);
+
+        // Add action listener to show a dialog or placeholder action for now
+        addBookButton.addActionListener(e -> {
+            new AddBookFrame(); // Open the new Add Book frame
+        });
+
+        // Add the Add Book button below the table
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(addBookButton);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+
+        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new HomeFrame().showHomeFrame();
+    }
+}

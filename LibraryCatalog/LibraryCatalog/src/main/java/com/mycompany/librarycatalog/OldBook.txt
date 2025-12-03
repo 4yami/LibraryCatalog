@@ -1,0 +1,32 @@
+package com.mycompany.librarycatalog;
+
+public class Book {
+
+    int bookId;
+    String isbn;
+    String title;
+    String author;
+    String publisher;
+    int year;
+    String genre;
+    int copyId;
+    double price;
+    String language;
+
+    // Constructor
+    public Book(int bookId, String isbn, String title, String author,
+            String publisher, int year, String genre, int copyId,
+            double price, String language) {
+        this.bookId = bookId;
+        this.isbn = isbn;
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.year = year;
+        this.genre = genre;
+        this.copyId = copyId;
+        this.price = price;
+        this.language = language;
+    }
+    
+}
